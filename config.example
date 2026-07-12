@@ -1,0 +1,10 @@
+# Copy this file to ~/.config/vikunja-capture/config and fill in real values,
+# then restrict permissions:
+#   mkdir -p ~/.config/vikunja-capture
+#   cp config.example ~/.config/vikunja-capture/config
+#   chmod 600 ~/.config/vikunja-capture/config
+#
+# The token needs ONLY the tasks:create permission (least privilege).
+VIKUNJA_URL=https://vikunja.example.com
+VIKUNJA_PROJECT_ID=5
+VIKUNJA_TOKEN=tk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

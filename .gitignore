@@ -1,0 +1,8 @@
+# Never commit real configuration or captured text — the config holds the API
+# token and failed-captures may hold private notes.
+config
+failed-captures.txt
+*.local
+
+__pycache__/
+*.pyc
