@@ -10,6 +10,12 @@ just a single wide box. Enter submits, Esc cancels. Press **Shift+Enter** to add
 more lines: the **first line becomes the task title** and everything after it
 becomes the task **description**.
 
+Type **`#tag`** anywhere in the title to attach a label: `buy coffee #errand`
+creates the task *"buy coffee"* with the **errand** label. The `#tag` is removed
+from the title, and the label is created in Vikunja if it doesn't exist yet
+(an existing label is reused, matched case-insensitively). See
+[Tags](#tags-labels) for the extra token permission this needs.
+
 ## Requirements (Linux)
 
 - `python3` (3.8+) — the scripts; standard library only, no pip packages
@@ -31,6 +37,20 @@ junk tasks to your Inbox. In particular, do **not** add `read_all`.
 
 If you ever build something that needs to *read* tasks, create a separate
 token for it instead of widening this one.
+
+**If you want `#tag` support**, the token needs three more permissions on top
+of `tasks: create`:
+
+- **`labels: create`** — create a label for a new tag
+- **`labels: read all`** — find an existing label so tags are reused, not duplicated
+- **`tasksLabels: create`** — attach a label to a task (this is a *separate*
+  permission group from `labels`; without it the attach step fails with `401`)
+
+This is a real widening of the least-privilege model above: a leaked token
+could then also list your labels and create new ones (still no access to task
+*contents*). If that trade-off isn't worth it to you, leave those off and just
+don't use `#tag` — captures without tags keep working on a
+`tasks: create`-only token.
 
 ### 2. Configure
 
@@ -78,6 +98,22 @@ extra flags. Adjust the `WIDTH` constant at the top of the script to taste.
   is the task title, any following lines are the description.
 - Success → **completely silent**, no popup or notification. The box just
   disappears. (No system notifications are used anywhere — by design.)
+
+### Tags (labels)
+
+- A **`#tag`** token in the title becomes a Vikunja **label** and is removed
+  from the title: `renew passport #admin #travel` → task *"renew passport"*
+  with the **admin** and **travel** labels.
+- A tag is a `#` at the start of the title or after a space, followed by
+  letters, digits, `_` or `-`. This leaves `C#`, `C++` and `#` inside URLs
+  untouched. Tags only come from the **title** line, not the description.
+- Missing labels are **created**; existing ones are **reused** (matched
+  case-insensitively, so `#work` finds a `Work` label). Duplicate tags in one
+  capture are collapsed.
+- Labels are **best-effort**: once the task is created your thought is safe, so
+  if a label can't be attached (e.g. the token lacks label permissions) the
+  task still lands and the error dialog names the tag to add by hand — the
+  capture is **not** re-backed-up (that would duplicate the task).
 - Any failure (offline, bad token, missing permission, wrong project) →
   **the text is never lost**: it is appended with a timestamp to
   `~/.config/vikunja-capture/failed-captures.txt`, and a blocking GTK error
@@ -93,7 +129,7 @@ extra flags. Adjust the `WIDTH` constant at the top of the script to taste.
 ## Repo layout
 
 ```
-lib/capture.py                # shared, UI-agnostic logic: config, PUT, errors, backup
+lib/capture.py                # shared, UI-agnostic logic: config, PUT, tags/labels, errors, backup
 linux/vikunja-capture-gtk.py  # Linux front-end: chromeless GTK box + first-run config setup
 config.example                # config template (no real secrets)
 ```
